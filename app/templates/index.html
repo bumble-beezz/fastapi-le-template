@@ -89,61 +89,119 @@
         <h6>Albums</h6>
         <div style="overflow-y: scroll; flex: 1;">
           <!-- Repeatable Album Card -->
+           {%for album in albums %}
           <div class="card horizontal">
             <div class="card-stacked">
               <div class="card-content">
-                <p><strong>Album</strong></p>
-                <p>Artist</p><br>
-                <a class="btn-small waves-effect purple">View</a>
+                <p><strong>{{ album.title }}</strong></p>
+                <p>{{ album.artist }}</p><br>
+                <a href="/app?album_id={{ album.id }}" class="btn-small waves-effect purple">View</a>
               </div>
             </div>
             <div class="card-image">
-              <img src="https://weblabs.web.app/api/brainrot/1.webp" alt="Album Cover">
+              <img src="{{ album.image_url }}" alt="Album Cover">
             </div>
           </div>
+          {% endfor %}
           <!-- End Repeat -->
         </div>
       </div>
   
       <!-- Tracks Column -->
       <div class="col s4 m5" style="display: flex; flex-direction: column;">
-        <h6>Selected Album Tracks</h6>
+        <h6>
+          {% if selected_album %}
+            {{ selected_album.title }} Tracks
+          {% else %}
+            Selected Album Tracks
+          {% endif %}
+        </h6>
         <div style="overflow-y: scroll; flex: 1;">
+          {% if selected_album %}
+            {% for track in tracks %}
           <!-- Repeatable Track Card -->
           <div class="card">
             <div class="card-content">
-              <span>Track Title - x comments</span>
-              <a class="btn-small right waves-effect purple lighten-1">View Comments ></a>
+              <span>{{ track.title }} – {{ comment_counts.get(track.id, 0) }} comments</span>
+              <a href="/app?album_id={{ selected_album.id }}&track_id={{ track.id }}"class="btn-small right waves-effect purple lighten-1">View Comments ></a>
             </div>
           </div>
+          {% endfor %}
+      {% else %}
+          <p class="grey-text">Select an album to view tracks</p>
+      {% endif %}
           <!-- End Repeat -->
         </div>
       </div>
   
       <!-- Comments Column -->
       <div class="col s4 m4" style="display: flex; flex-direction: column;">
-        <h6>Selected Track Comments</h6>
+        <h6>
+          {% if selected_track %}
+            {{ selected_track.title }} Comments
+          {% else %}
+            Selected Track Comments
+          {% endif %}
+        </h6>
+        {% if selected_track %}
+          <!-- Reactions -->
+      <div class="row" style="margin-bottom: 10px;">
+        <p>
+          Reactions: 
+          <span class="green-text"> Likes: {{ likes_count }}</span> 
+          <span class="red-text"> Dislikes: {{ dislikes_count }}</span>
+        </p>
+        <!-- Like / Dislike buttons -->
+        <form method="post" action="/react" style="display:inline-block;">
+          <input type="hidden" name="track_id" value="{{ selected_track.id }}">
+          <input type="hidden" name="album_id" value="{{ selected_album.id }}">
+          <input type="hidden" name="reaction_type" value="like">
+          <button type="submit" class="btn-small green">Like</button>
+        </form>
+        <form method="post" action="/react" style="display:inline-block;">
+          <input type="hidden" name="track_id" value="{{ selected_track.id }}">
+          <input type="hidden" name="album_id" value="{{ selected_album.id }}">
+          <input type="hidden" name="reaction_type" value="dislike">
+          <button type="submit" class="btn-small red">Dislike</button>
+        </form>
+      </div>
         <!-- Comment Form -->
-        <form class="row" style="margin-bottom: 0;">
+        <form class="row" style="margin-bottom: 0;" method="post" action="/add_comment">
+          <input type="hidden" name="album_id" value="{{ selected_album.id }}">
+          <input type="hidden" name="track_id" value="{{ selected_track.id }}">
           <div class="input-field col s9">
-            <input type="text" id="comment" placeholder="Placeholder">
+            <input type="text" id="comment" name="text" placeholder="Enter comment here!">
             <label for="comment">Comment</label>
           </div>
           <div class="col s3" style="display: flex; align-items: center;">
             <button class="btn waves-effect purple waves-light" type="submit">Add</button>
           </div>
         </form>
+
         <!-- Comments List -->
         <div style="overflow-y: scroll; flex: 1;">
           <ul class="collection">
+            {% for comment in comments %}
             <!-- Repeatable Comment -->
             <li class="collection-item">
-              Text
-              <a href="#!" class="secondary-content"><i class="material-icons">delete</i></a>
+              <strong>{{ comment.user.username }}:</strong> {{ comment.text }}
+              {% if comment.user_id == user.id %}
+              <form method="post" action="/delete_comment" style="display:inline; float:right;">
+                <input type="hidden" name="comment_id" value="{{ comment.id }}">
+                <input type="hidden" name="album_id" value="{{ selected_album.id }}">
+                <input type="hidden" name="track_id" value="{{ selected_track.id }}">
+                <button type="submit" class="secondary-content" style="background:none;border:none;padding:0;">
+                  <i class="material-icons">delete</i>
+                </button>
+              </form>
+              {% endif %}
             </li>
-            <!-- End Repeat -->
+            {% endfor %}
           </ul>
         </div>
+      {% else %}
+          <p class="grey-text">Select a track to view comments and react</p>
+        {% endif %}    
       </div>
     </main>
     
