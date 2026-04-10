@@ -16,196 +16,117 @@
         box-sizing: border-box;
       }
 
-      .row{
-        margin: 0;
-      }
-
-      body{
-        display: flex;
-        height: 100vh;
-        flex-direction: column;
-      }
-
-
-
-      nav{
-        flex-grow: 1;
-        margin-bottom: 0;
-      }
-
       main{
-        flex-grow: 28;
-        display: flex;
-        width: 100%;
-        flex-direction: row;
-        align-items: stretch;
+        padding-left: 300px;
       }
 
-      .card{
-        margin: 2px;
+      @media only screen and (max-width : 992px) {
+        main {
+          padding-left: 0;
+        }
       }
 
+      #formRow{
+        width: 100%; margin-left: auto;  margin-right: auto; background-color: blue;
+        margin-top: 0;
+      }
 
     </style>
 
   </head>
   <body>
-
-    <nav class="nav-extended purple">
-      <div class="nav-wrapper">
-        <span style="margin-left: 10px;">
-         LE App
-        </span>
-        
-        <ul id="nav-mobile" class="right">
-          <li><a href="/logout">Logout</a></li>
-        </ul>
-      </div>
-
-    </nav>
-
-    <div class="row" style="margin-top: 10px; position: absolute; height:20px; top:10; z-index:10; height:30px; width: 100vw;">
-      {% with messages = get_flashed_messages(request) %}
-        {% if messages %}
-          {% for message in messages %}
-            <div class="blue lighten-5 col s10 offset-s1">
-              <div class="row"> 
-                  <div class="col s11" style="font-weight: bold;text-align: center">
-                    {{ message }}
-                  </div>
-                  <div class="col s1">
-                    <a href="" style="font-size:1.5em" >&times;</a>
-                  </div>  
-              </div>
-            </div> 
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
-    </div>
-
-    <main class="row">
-      <!-- Albums Column -->
-      <div class="col s4 m3" style="display: flex; flex-direction: column;">
-        <h6>Albums</h6>
-        <div style="overflow-y: scroll; flex: 1;">
-          <!-- Repeatable Album Card -->
-           {%for album in albums %}
-          <div class="card horizontal">
-            <div class="card-stacked">
-              <div class="card-content">
-                <p><strong>{{ album.title }}</strong></p>
-                <p>{{ album.artist }}</p><br>
-                <a href="/app?album_id={{ album.id }}" class="btn-small waves-effect purple">View</a>
-              </div>
-            </div>
-            <div class="card-image">
-              <img src="{{ album.image_url }}" alt="Album Cover">
-            </div>
-          </div>
-          {% endfor %}
-          <!-- End Repeat -->
-        </div>
-      </div>
-  
-      <!-- Tracks Column -->
-      <div class="col s4 m5" style="display: flex; flex-direction: column;">
-        <h6>
-          {% if selected_album %}
-            {{ selected_album.title }} Tracks
-          {% else %}
-            Selected Album Tracks
-          {% endif %}
-        </h6>
-        <div style="overflow-y: scroll; flex: 1;">
-          {% if selected_album %}
-            {% for track in tracks %}
-          <!-- Repeatable Track Card -->
-          <div class="card">
-            <div class="card-content">
-              <span>{{ track.title }} – {{ comment_counts.get(track.id, 0) }} comments</span>
-              <a href="/app?album_id={{ selected_album.id }}&track_id={{ track.id }}"class="btn-small right waves-effect purple lighten-1">View Comments ></a>
-            </div>
-          </div>
-          {% endfor %}
-      {% else %}
-          <p class="grey-text">Select an album to view tracks</p>
-      {% endif %}
-          <!-- End Repeat -->
-        </div>
-      </div>
-  
-      <!-- Comments Column -->
-      <div class="col s4 m4" style="display: flex; flex-direction: column;">
-        <h6>
-          {% if selected_track %}
-            {{ selected_track.title }} Comments
-          {% else %}
-            Selected Track Comments
-          {% endif %}
-        </h6>
-        {% if selected_track %}
-          <!-- Reactions -->
-      <div class="row" style="margin-bottom: 10px;">
-        <p>
-          Reactions: 
-          <span class="green-text"> Likes: {{ likes_count }}</span> 
-          <span class="red-text"> Dislikes: {{ dislikes_count }}</span>
-        </p>
-        <!-- Like / Dislike buttons -->
-        <form method="post" action="/react" style="display:inline-block;">
-          <input type="hidden" name="track_id" value="{{ selected_track.id }}">
-          <input type="hidden" name="album_id" value="{{ selected_album.id }}">
-          <input type="hidden" name="reaction_type" value="like">
-          <button type="submit" class="btn-small green">Like</button>
-        </form>
-        <form method="post" action="/react" style="display:inline-block;">
-          <input type="hidden" name="track_id" value="{{ selected_track.id }}">
-          <input type="hidden" name="album_id" value="{{ selected_album.id }}">
-          <input type="hidden" name="reaction_type" value="dislike">
-          <button type="submit" class="btn-small red">Dislike</button>
-        </form>
-      </div>
-        <!-- Comment Form -->
-        <form class="row" style="margin-bottom: 0;" method="post" action="/add_comment">
-          <input type="hidden" name="album_id" value="{{ selected_album.id }}">
-          <input type="hidden" name="track_id" value="{{ selected_track.id }}">
-          <div class="input-field col s9">
-            <input type="text" id="comment" name="text" placeholder="Enter comment here!">
-            <label for="comment">Comment</label>
-          </div>
-          <div class="col s3" style="display: flex; align-items: center;">
-            <button class="btn waves-effect purple waves-light" type="submit">Add</button>
-          </div>
-        </form>
-
-        <!-- Comments List -->
-        <div style="overflow-y: scroll; flex: 1;">
-          <ul class="collection">
-            {% for comment in comments %}
-            <!-- Repeatable Comment -->
-            <li class="collection-item">
-              <strong>{{ comment.user.username }}:</strong> {{ comment.text }}
-              {% if comment.user_id == user.id %}
-              <form method="post" action="/delete_comment" style="display:inline; float:right;">
-                <input type="hidden" name="comment_id" value="{{ comment.id }}">
-                <input type="hidden" name="album_id" value="{{ selected_album.id }}">
-                <input type="hidden" name="track_id" value="{{ selected_track.id }}">
-                <button type="submit" class="secondary-content" style="background:none;border:none;padding:0;">
-                  <i class="material-icons">delete</i>
-                </button>
-              </form>
-              {% endif %}
-            </li>
+      <div class="row" style="position: absolute; height:20px; top:0; z-index:10; width:100vw">
+        {% with messages = get_flashed_messages(request) %}
+          {% if messages %}
+            {% for message in messages %}
+              <div class="blue lighten-5 col s10 offset-s1">
+                <div class="row"> 
+                    <div class="col s11" style="font-weight: bold;text-align: center">
+                      {{ message }}
+                    </div>
+                    <div class="col s1">
+                      <a href="" style="font-size:1.5em" >&times;</a>
+                    </div>  
+                </div>
+              </div> 
             {% endfor %}
+          {% endif %}
+        {% endwith %}
+      </div>
+
+    <ul id="slide-out" class="sidenav sidenav-fixed">
+      <nav class="nav-extended purple" style="margin-bottom:10px">
+        <div class="nav-wrapper">
+          <a href="#" style="font-size:1.5em" class="brand-logo left">Logged in As:  </a>
+        </div>
+      </nav>
+      
+      <div class="input-field col s12" >
+        <select class="icons" name="student_id" onchange="window.location.href = `/app/${this.value}`">
+          <option value=""  disabled >Choose your option</option>
+          <option value="820321819" selected data-icon="https://randomuser.me/api/portraits/men/2.jpg">Tyler Dunn</option>
+        </select>
+        <label>Select Student</label>
+      </div>
+
+      <div class="col s12">
+          <!-- Student Details -->
+      </div>
+
+    </ul>
+
+    <main class="col s12">
+
+      <nav class="nav-extended purple" style="margin-bottom:10px">
+        <div class="nav-wrapper">
+          <span style="margin-left: 10px;">
+            Create Review for 
+          </span>
+          
+          <ul id="nav-mobile" class="right">
+            <li><a href="/logout">Logout</a></li>
           </ul>
         </div>
-      {% else %}
-          <p class="grey-text">Select a track to view comments and react</p>
-        {% endif %}    
-      </div>
-    </main>
-    
+        <div class="nav-content purple">
+ 
+          <form>
+            <input type="hidden" value="" name="student_id">
+                  
+            <div class="row" style="width: 95%">
+              <div class="input-field col s10 offset-s1">
+                <textarea name="text" class="materialize-textarea"></textarea>
+                <label for="text">Review Text</label>
+              </div>
+
+              <div class="input-field col s1 offset-s1">
+                Rating:
+              </div>
    
+              <div class="input-field col s4">
+                <p class="range-field">
+                  <input type="range" name="rating" min="0" max="5" />
+                </p>
+              </div>
+              
+              <div class="input-field col s3 offset-s3">
+                <input type="submit" class="btn" value="create">
+              </div>
+              
+            </div>
+            
+          </form>
+          
+        </div>
+      </nav>
+
+      <div class="row" style="width: 95%; height: 67vh; overflow-y:scroll; margin-left: auto;  margin-right: auto;">
+        <div class="col s12">
+            Show reviews here
+        </div>
+      </div>
+
+    </main>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script> M.AutoInit(); </script>
   </body>
